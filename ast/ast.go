@@ -2,6 +2,7 @@ package ast
 
 import (
 	"bytes"
+	"fmt"
 
 	"github.com/literallystan/go-terpreter/token"
 )
@@ -39,7 +40,7 @@ func (p *Program) String() string {
 	return out.String()
 }
 
-//TokenLiteral - return the statements TokenLiteral
+//TokenLiteral return the statements TokenLiteral
 func (p *Program) TokenLiteral() string {
 	if len(p.Statements) > 0 {
 		return p.Statements[0].TokenLiteral()
@@ -134,19 +135,49 @@ func (il *IntegerLiteral) expressionNode() {}
 func (il *IntegerLiteral) TokenLiteral() string { return il.Token.Literal }
 func (il *IntegerLiteral) String() string       { return il.Token.Literal }
 
+//PrefixExpression ...
 type PrefixExpression struct {
 	Token    token.Token // The prefix token, e.g. !
 	Operator string
 	Right    Expression
 }
 
-func (pe *PrefixExpression) expressionNode()      {}
+func (pe *PrefixExpression) expressionNode() {}
+
+//TokenLiteral ...
 func (pe *PrefixExpression) TokenLiteral() string { return pe.Token.Literal }
 func (pe *PrefixExpression) String() string {
 	var out bytes.Buffer
+
 	out.WriteString("(")
 	out.WriteString(pe.Operator)
 	out.WriteString(pe.Right.String())
 	out.WriteString(")")
+
+	return out.String()
+}
+
+//InfixExpression ...
+type InfixExpression struct {
+	Token    token.Token // The operator token, e.g. +
+	Left     Expression
+	Operator string
+	Right    Expression
+}
+
+func (ie *InfixExpression) expressionNode() {}
+
+//TokenLiteral ...
+func (ie *InfixExpression) TokenLiteral() string { return ie.Token.Literal }
+func (ie *InfixExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("(")
+	out.WriteString(ie.Left.String())
+	out.WriteString(" " + ie.Operator + " ")
+	fmt.Println(ie.Right.String())
+	out.WriteString(ie.Right.String())
+	out.WriteString(")")
+
 	return out.String()
 }
