@@ -2,7 +2,6 @@ package ast
 
 import (
 	"bytes"
-	"fmt"
 
 	"github.com/literallystan/go-terpreter/token"
 )
@@ -175,9 +174,74 @@ func (ie *InfixExpression) String() string {
 	out.WriteString("(")
 	out.WriteString(ie.Left.String())
 	out.WriteString(" " + ie.Operator + " ")
-	fmt.Println(ie.Right.String())
 	out.WriteString(ie.Right.String())
 	out.WriteString(")")
+
+	return out.String()
+}
+
+//Boolean ...
+type Boolean struct {
+	Token token.Token
+	Value bool
+}
+
+func (b *Boolean) expressionNode() {}
+
+//TokenLiteral ...
+func (b *Boolean) TokenLiteral() string { return b.Token.Literal }
+
+//String ...
+func (b *Boolean) String() string { return b.Token.Literal }
+
+//BlockStatement ...
+type BlockStatement struct {
+	Token      token.Token
+	Statements []Statement
+}
+
+func (bs *BlockStatement) expressionNode() {}
+
+//TokenLiteral ...
+func (bs *BlockStatement) TokenLiteral() string { return bs.Token.Literal }
+
+//String ...
+func (bs *BlockStatement) String() string {
+	var out bytes.Buffer
+
+	for _, s := range bs.Statements {
+		out.WriteString(s.String())
+	}
+
+	return out.String()
+}
+
+//IfExpression ...
+type IfExpression struct {
+	Token       token.Token
+	Condition   Expression
+	Consequence *BlockStatement
+	Alternative *BlockStatement
+}
+
+func (ie *IfExpression) expressionNode() {}
+
+//TokenLiteral ...
+func (ie *IfExpression) TokenLiteral() string { return ie.Token.Literal }
+
+//String ...
+func (ie *IfExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("if")
+	out.WriteString(ie.Condition.String())
+	out.WriteString(" ")
+	out.WriteString(ie.Consequence.String())
+
+	if ie.Alternative != nil {
+		out.WriteString("else")
+		out.WriteString(ie.Alternative.String())
+	}
 
 	return out.String()
 }
