@@ -5,9 +5,11 @@ import (
 )
 
 const (
-	INTEGER_OBJ = "INTEGER"
-	BOOLEAN_OBJ = "BOOLEAN"
-	NULL_OBJ    = "NULL"
+	INTEGER_OBJ      = "INTEGER"
+	BOOLEAN_OBJ      = "BOOLEAN"
+	NULL_OBJ         = "NULL"
+	RETURN_VALUE_OBJ = "RETURN_VALUE"
+	ERROR_OBJ        = "ERROR"
 )
 
 //ObjectType string representation of the object's type
@@ -49,3 +51,25 @@ func (n *Null) Inspect() string { return "null" }
 
 //Type returns the object's Type
 func (n *Null) Type() ObjectType { return NULL_OBJ }
+
+//ReturnValue contains values from return statements
+type ReturnValue struct {
+	Value Object
+}
+
+//Type returns the object's Type
+func (rv *ReturnValue) Type() ObjectType { return RETURN_VALUE_OBJ }
+
+//Inspect returns the literal value as a string
+func (rv *ReturnValue) Inspect() string { return rv.Value.Inspect() }
+
+//Error handles error messages to throw from the interpretor
+type Error struct {
+	Message string
+}
+
+//Type returns the object's Type
+func (e *Error) Type() ObjectType { return ERROR_OBJ }
+
+//Inspect returns the literal value as a string
+func (e *Error) Inspect() string { return "ERROR: " + e.Message }
