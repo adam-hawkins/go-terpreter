@@ -616,61 +616,6 @@ func TestCallExpressionParsing(t *testing.T) {
 	testInfixExpression(t, exp.Arguments[2], 4, "+", 5)
 }
 
-/*
-func TestCallExpressionParameterParsing(t *testing.T) {
-	tests := []struct {
-		input         string
-		expectedIdent string
-		expectedArgs  []string
-	}{
-		{
-			input:         "add();",
-			expectedIdent: "add",
-			expectedArgs:  []string{},
-		},
-		{
-			input:         "add(1);",
-			expectedIdent: "add",
-			expectedArgs:  []string{"1"},
-		},
-		{
-			input:         "add(1, 2 * 3, 4 + 5);",
-			expectedIdent: "add",
-			expectedArgs:  []string{"1", "(2 * 3)", "(4 + 5)"},
-		},
-	}
-
-	for _, tt := range tests {
-		l := lexer.New(tt.input)
-		p := New(l)
-		program := p.ParseProgram()
-		checkParserErrors(t, p)
-
-		stmt := program.Statements[0].(*ast.ExpressionStatement)
-		exp, ok := stmt.Expression.(*ast.CallExpression)
-		if !ok {
-			t.Fatalf("stmt.Expression is not ast.CallExpression. got=%T",
-				stmt.Expression)
-		}
-
-		if !testIdentifier(t, exp.Function, tt.expectedIdent) {
-			return
-		}
-
-		if len(exp.Arguments) != len(tt.expectedArgs) {
-			t.Fatalf("wrong number of arguments. want=%d, got=%d",
-				len(tt.expectedArgs), len(exp.Arguments))
-		}
-
-		for i, arg := range tt.expectedArgs {
-			if exp.Arguments[i].String() != arg {
-				t.Errorf("argument %d wrong. want=%q, got=%q", i,
-					arg, exp.Arguments[i].String())
-			}
-		}
-	}
-} */
-
 func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
 	if s.TokenLiteral() != "let" {
 		t.Errorf("s.TokenLiteral not 'let'. got=%q", s.TokenLiteral())
@@ -815,4 +760,23 @@ func checkParserErrors(t *testing.T, p *Parser) {
 		t.Errorf("parser error: %q", msg)
 	}
 	t.FailNow()
+}
+
+func TestStringLiteralExpression(t *testing.T) {
+	input := `"hello world";`
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	stmt := program.Statements[0].(*ast.ExpressionStatement)
+	literal, ok := stmt.Expression.(*ast.StringLiteral)
+	if !ok {
+		t.Fatalf("exp not *ast.StringLiteral. got=%T", stmt.Expression)
+	}
+
+	if literal.Value != "hello world" {
+		t.Errorf("literal.Value not %q. got=%q", "hello world", literal.Value)
+	}
 }
