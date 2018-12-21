@@ -3,6 +3,7 @@ package object
 import (
 	"bytes"
 	"fmt"
+	"hash/fnv"
 	"strings"
 
 	"github.com/literallystan/go-terpreter/ast"
@@ -18,6 +19,7 @@ const (
 	STRING_OBJ       = "STRING"
 	BUILTIN_OBJ      = "BUILTIN"
 	ARRAY_OBJ        = "ARRAY"
+	HASH_OBJ         = "HASH"
 )
 
 //ObjectType string representation of the object's type
@@ -33,8 +35,6 @@ type Object interface {
 type Integer struct {
 	Value int64
 }
-
-type BuiltinFunction func(args ...Object) Object
 
 //Inspect returns the literal value as a string
 func (i *Integer) Inspect() string { return fmt.Sprintf("%d", i.Value) }
@@ -57,7 +57,7 @@ func (b *Boolean) Type() ObjectType { return BOOLEAN_OBJ }
 type Null struct{}
 
 //Inspect returns the literal value as a string
-func (n *Null) Inspect() string { return "null" }
+func (n *Null) Inspect() string { return "" }
 
 //Type returns the object's Type
 func (n *Null) Type() ObjectType { return NULL_OBJ }
@@ -120,6 +120,8 @@ type Builtin struct {
 	Fn BuiltinFunction
 }
 
+type BuiltinFunction func(args ...Object) Object
+
 func (b *Builtin) Type() ObjectType { return BUILTIN_OBJ }
 func (b *Builtin) Inspect() string  { return "builtin function" }
 
@@ -142,3 +144,64 @@ func (ao *Array) Inspect() string {
 
 	return out.String()
 }
+
+type HashKey struct {
+	Type  ObjectType
+	Value uint64
+}
+
+type Hashable interface {
+	HashKey() HashKey
+}
+
+func (b *Boolean) HashKey() HashKey {
+	var value uint64
+
+	if b.Value {
+		value = 1
+	} else {
+		value = 0
+	}
+
+	return HashKey{Type: b.Type(), Value: value}
+}
+
+func (i *Integer) HashKey() HashKey {
+	return HashKey{Type: i.Type(), Value: uint64(i.Value)}
+}
+
+func (s *String) HashKey() HashKey {
+	h := fnv.New64a()
+	h.Write([]byte(s.Value))
+
+	return HashKey{Type: s.Type(), Value: h.Sum64()}
+}
+
+type HashPair struct {
+	Key   Object
+	Value Object
+}
+
+type Hash struct {
+	Pairs map[HashKey]HashPair
+}
+
+func (h *Hash) Type() ObjectType { return HASH_OBJ }
+
+func (h *Hash) Inspect() string {
+	var out bytes.Buffer
+
+	pairs := []string{}
+	for _, pair := range h.Pairs {
+		pairs = append(pairs, fmt.Sprintf("%s: %s",
+			pair.Key.Inspect(), pair.Value.Inspect()))
+	}
+
+	out.WriteString("{")
+	out.WriteString(strings.Join(pairs, ", "))
+	out.WriteString("}")
+
+	return out.String()
+}
+
+//TODO: Cache HashKey() return methods
